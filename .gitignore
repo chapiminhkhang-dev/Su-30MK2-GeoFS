@@ -1,24 +1,60 @@
-# Compiled class file
-*.class
+(function GEOFS_PACKED_SCRIPT(){
 
-# Log file
-*.log
+    function wait() {
+        if (typeof geofs === "undefined" ||
+            !geofs.aircraft ||
+            !geofs.aircraft.instance) {
 
-# BlueJ files
-*.ctxt
+            console.log("⏳ Đang chờ GeoFS load...");
+            setTimeout(wait, 1000);
+            return;
+        }
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+        let ac = geofs.aircraft.instance;
+        console.log("✅ GeoFS ready | Aircraft ID:", ac.id);
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+        /* =========================
+           1️⃣ LOAD LIVERY (TÙY CHỈNH)
+           ========================= */
+        try {
+            ac.loadLivery({
+                fuselage: "https://YOUR_LINK/fuselage.png",
+                wings: "https://YOUR_LINK/wings.png"
+                // thêm tail nếu có
+            });
+            console.log("🎨 Livery loaded");
+        } catch(e) {
+            console.log("⚠️ Không load được livery (bỏ qua)");
+        }
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+        /* =========================
+           2️⃣ GIẢ LẬP TREO VŨ KHÍ
+           ========================= */
+        ac.mass *= 1.15;        // nặng hơn
+        ac.dragCoef *= 1.18;    // cản gió tăng
+        console.log("💣 Giả lập missile + drop tank");
+
+        /* =========================
+           3️⃣ BOOST HỢP LÝ
+           ========================= */
+        if (ac.engines) {
+            ac.engines.forEach(e => {
+                e.thrust *= 1.25; // đủ kéo tải, không văng
+            });
+        }
+
+        /* =========================
+           4️⃣ BAY XA / ỔN ĐỊNH
+           ========================= */
+        ac.maxTrueAirSpeed *= 1.3;
+        ac.trueAirSpeed = Math.min(ac.trueAirSpeed + 80, ac.maxTrueAirSpeed);
+
+        console.log("🚀 Boost & range applied");
+        console.log("✅ SCRIPT HOÀN TẤT");
+
+    }
+
+    wait();
+
+})();
+
