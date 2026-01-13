@@ -1,60 +1,89 @@
-(function GEOFS_PACKED_SCRIPT(){
+(()=>{
 
-    function wait() {
-        if (typeof geofs === "undefined" ||
-            !geofs.aircraft ||
-            !geofs.aircraft.instance) {
+const ac = geofs.aircraft.instance;
 
-            console.log("⏳ Đang chờ GeoFS load...");
-            setTimeout(wait, 1000);
-            return;
-        }
+// ================= BASIC INFO =================
+ac.type = "SU-30MK2";
+ac.country = "Vietnam";
 
-        let ac = geofs.aircraft.instance;
-        console.log("✅ GeoFS ready | Aircraft ID:", ac.id);
+// ================= HUD / RADAR =================
+ac.radar = {
+  enabled: true,
+  range: 140,
+  mode: "search",
+  targets: []
+};
 
-        /* =========================
-           1️⃣ LOAD LIVERY (TÙY CHỈNH)
-           ========================= */
-        try {
-            ac.loadLivery({
-                fuselage: "https://YOUR_LINK/fuselage.png",
-                wings: "https://YOUR_LINK/wings.png"
-                // thêm tail nếu có
-            });
-            console.log("🎨 Livery loaded");
-        } catch(e) {
-            console.log("⚠️ Không load được livery (bỏ qua)");
-        }
+ac.hud = {
+  color: "green",
+  brightness: 1,
+  style: "russian"
+};
 
-        /* =========================
-           2️⃣ GIẢ LẬP TREO VŨ KHÍ
-           ========================= */
-        ac.mass *= 1.15;        // nặng hơn
-        ac.dragCoef *= 1.18;    // cản gió tăng
-        console.log("💣 Giả lập missile + drop tank");
+// ================= IRST =================
+ac.irst = {
+  enabled: true,
+  range: 60,
+  track: true
+};
 
-        /* =========================
-           3️⃣ BOOST HỢP LÝ
-           ========================= */
-        if (ac.engines) {
-            ac.engines.forEach(e => {
-                e.thrust *= 1.25; // đủ kéo tải, không văng
-            });
-        }
+// ================= RWR / ECM =================
+ac.rwr = { enabled: true };
+ac.ecm = { enabled: true };
 
-        /* =========================
-           4️⃣ BAY XA / ỔN ĐỊNH
-           ========================= */
-        ac.maxTrueAirSpeed *= 1.3;
-        ac.trueAirSpeed = Math.min(ac.trueAirSpeed + 80, ac.maxTrueAirSpeed);
+// ================= FLIGHT CONTROL =================
+ac.flyByWire = true;
+ac.autopilot = {
+  enabled: true,
+  modes: ["alt", "hdg", "spd"]
+};
 
-        console.log("🚀 Boost & range applied");
-        console.log("✅ SCRIPT HOÀN TẤT");
+// ================= ENGINES =================
+ac.engines = {
+  count: 2,
+  sync: true,
+  type: "AL-31F"
+};
 
-    }
+// ================= FUEL =================
+ac.fuelSystem = {
+  internal: true,
+  external: true
+};
 
-    wait();
+// ================= EFFECTS =================
+ac.addEffect && ac.addEffect("smoke");
+
+// ================= LOAD MODELS =================
+const BASE = "https://raw.githubusercontent.com/USERNAME/REPO/main/";
+
+(async()=>{
+
+  // Drop tanks (wings)
+  for(const z of [5,-5]){
+    const t = await ac.loadModel({url:BASE+"SU30_DropTank.glb",scale:1});
+    t.setPosition([1.6,-1.3,z]);
+  }
+
+  // Drop tank (center)
+  const tb = await ac.loadModel({url:BASE+"SU30_DropTank.glb",scale:1});
+  tb.setPosition([0,-1.6,0]);
+
+  // ECM pod
+  const ecm = await ac.loadModel({url:BASE+"SU30_ECM_Pod.glb",scale:1});
+  ecm.setPosition([0,-1.4,0]);
+
+  // IRST
+  const irst = await ac.loadModel({url:BASE+"SU30_IRST.glb",scale:1});
+  irst.setPosition([3.4,1.1,0]);
 
 })();
 
+// ================= DATALINK (FAKE TARGETS) =================
+setInterval(()=>{
+  ac.radar.targets = geofs.aircraft.getNearbyAircraft?.() || [];
+},1000);
+
+console.log("SU-30MK2 FULL SYSTEM LOADED (NO WEAPONS)");
+
+})();
